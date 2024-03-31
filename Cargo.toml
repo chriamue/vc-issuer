@@ -10,4 +10,22 @@ keywords = ["vc", "issuer", "verifiable-credentials"]
 categories = ["web-programming", "security"]
 authors = ["Christian M <chriamue@gmail.com>"]
 
+[features]
+default = ["server"]
+server = ["dotenv", "tokio", "tower-http", "tracing", "tracing-subscriber"]
+
 [dependencies]
+anyhow = "1.0.81"
+axum = "0.7.5"
+dotenv = { version = "0.15.0", optional = true }
+qrcode = "0.14.0"
+serde = { version = "1.0.197", features = ["derive"] }
+serde_json = "1.0.115"
+
+tokio = { version = "1.37.0", features = [
+    "rt-multi-thread",
+    "macros",
+], optional = true }
+tower-http = { version = "0.5", features = ["trace"], optional = true }
+tracing = { version = "0.1", optional = true }
+tracing-subscriber = { version = "0.3", optional = true }
