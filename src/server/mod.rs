@@ -5,6 +5,7 @@ use tokio::net::TcpListener;
 #[derive(Clone)]
 pub struct AppState {
     pub base_url: String,
+    pub domain: String,
     pub seed: String,
 }
 
