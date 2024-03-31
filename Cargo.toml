@@ -29,3 +29,4 @@ tokio = { version = "1.37.0", features = [
 tower-http = { version = "0.5", features = ["trace"], optional = true }
 tracing = { version = "0.1", optional = true }
 tracing-subscriber = { version = "0.3", optional = true }
+urlencoding = "2.1.3"

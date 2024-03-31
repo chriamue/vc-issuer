@@ -13,3 +13,8 @@ pub async fn create_qr_code(id: String, base_url: String) -> Result<String> {
         .build();
     Ok(string)
 }
+
+pub fn create_oob_url(id: &str, base_url: String) -> Result<String> {
+    let oob_data = format!("{}/ssi?oob?id={}", base_url, id);
+    Ok(urlencoding::encode(&oob_data).to_string())
+}
