@@ -1,0 +1,13 @@
+[package]
+name = "vc-issuer"
+version = "0.1.0"
+edition = "2021"
+description = "A simple VC issuer"
+license = "MIT"
+repository = "https://github.com/chriamue/vc-issuer"
+readme = "README.md"
+keywords = ["vc", "issuer", "verifiable-credentials"]
+categories = ["web-programming", "security"]
+authors = ["Christian M <chriamue@gmail.com>"]
+
+[dependencies]
