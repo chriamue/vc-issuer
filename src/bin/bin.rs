@@ -1,7 +1,9 @@
-use std::env;
-
 use anyhow::Result;
 use dotenv::dotenv;
+use ngrok::prelude::*;
+use std::env;
+use std::net::SocketAddr;
+use tokio::task;
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 use vc_issuer::{
     routes::router,
@@ -25,11 +27,34 @@ async fn main() -> Result<()> {
         seed,
     };
 
+    let mut tun = ngrok::Session::builder()
+        .authtoken_from_env()
+        .connect()
+        .await
+        .unwrap()
+        .http_endpoint()
+        .listen()
+        .await
+        .unwrap();
+
+    let base_url = tun.url().to_string();
+
+    tracing::info!("App URL: {:?}", base_url);
+
+    let ngrok_tunnel = task::spawn(async move {
+        let addr = SocketAddr::from(([127, 0, 0, 1], 3000));
+        tun.forward_tcp(addr).await.unwrap();
+    });
+
     let listener = tokio::net::TcpListener::bind("0.0.0.0:3000").await?;
 
     let app = router(app);
-    println!("Running {}", listener.local_addr()?);
+    tracing::info!("Running {}", listener.local_addr()?);
 
-    serve(listener, app).await?;
+    let server = task::spawn(async move {
+        serve(listener, app).await.unwrap();
+    });
+
+    let _ = tokio::try_join!(ngrok_tunnel, server)?;
     Ok(())
 }

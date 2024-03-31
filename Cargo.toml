@@ -12,7 +12,14 @@ authors = ["Christian M <chriamue@gmail.com>"]
 
 [features]
 default = ["server"]
-server = ["dotenv", "tokio", "tower-http", "tracing", "tracing-subscriber"]
+server = [
+    "dotenv",
+    "ngrok",
+    "tokio",
+    "tower-http",
+    "tracing",
+    "tracing-subscriber",
+]
 
 [dependencies]
 anyhow = "1.0.81"
@@ -33,3 +40,4 @@ tower-http = { version = "0.5", features = ["trace"], optional = true }
 tracing = { version = "0.1", optional = true }
 tracing-subscriber = { version = "0.3", optional = true }
 urlencoding = "2.1.3"
+ngrok = { version = "0.13.1", optional = true }
