@@ -23,7 +23,7 @@ server = [
 
 [dependencies]
 anyhow = "1.0.81"
-axum = "0.7.5"
+axum = { version = "0.7.5", features = ["json"] }
 dotenv = { version = "0.15.0", optional = true }
 ed25519-dalek = { version = "2.1", default-features = false }
 hex = "0.4.3"
@@ -38,7 +38,12 @@ tokio = { version = "1.37.0", features = [
 ], optional = true }
 tower-http = { version = "0.5", features = ["trace"], optional = true }
 tracing = { version = "0.1", optional = true }
-tracing-subscriber = { version = "0.3", optional = true }
+tracing-subscriber = { version = "0.3", features = [
+    "env-filter",
+], optional = true }
 urlencoding = "2.1.3"
 ngrok = { version = "0.13.1", optional = true }
 base64 = "0.22.0"
+bs58 = "0.5.1"
+async-trait = "0.1.79"
+didcomm-rs = { version = "0.7.2", git = "https://github.com/chriamue/didcomm-rs.git", branch = "feature/jwm-header" }

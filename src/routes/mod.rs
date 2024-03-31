@@ -1,10 +1,13 @@
+use crate::did::DidcommEnvelope;
+use crate::key::keypair_from_seed;
 use crate::server::AppState;
-use crate::services::{create_did_document, create_oob_url, create_qr_code};
+use crate::services::{create_did_document, create_oob_url, create_qr_code, handle_didcomm};
 use axum::Router;
 use axum::{
     extract::{Path, Query, State},
     response::{IntoResponse, Redirect},
-    routing::get,
+    routing::{get, post},
+    Json,
 };
 use serde::Deserialize;
 
@@ -18,6 +21,7 @@ pub fn router(app: AppState) -> Router {
         .route("/qr/:id", get(handle_qr_code_request))
         .route("/inv", get(handle_invitation_request))
         .route("/ssi", get(|| async { "Hello from ssi!" }))
+        .route("/didcomm", post(handle_didcomm_request))
         .route("/.well-known/did.json", get(handle_did_doc_request))
         .with_state(app)
 }
@@ -35,7 +39,14 @@ pub async fn handle_invitation_request(
     Query(query): Query<IdQuery>,
     State(state): State<AppState>,
 ) -> impl IntoResponse {
-    let url = create_oob_url(&query.id, state.base_url.clone()).unwrap();
+    let seed = state.seed.clone();
+    let url = create_oob_url(
+        &query.id,
+        state.base_url.clone(),
+        state.domain.clone(),
+        seed,
+    )
+    .unwrap();
     Redirect::temporary(&url)
 }
 
@@ -44,4 +55,22 @@ pub async fn handle_did_doc_request(State(state): State<AppState>) -> impl IntoR
     let domain = state.domain.clone();
     let seed = state.seed.clone();
     create_did_document(id, domain, seed).unwrap()
+}
+
+pub async fn handle_didcomm_request(
+    DidcommEnvelope { value }: DidcommEnvelope,
+) -> impl IntoResponse {
+    // Log the entire JSON payload
+    tracing::info!("Received DIDComm message");
+
+    tracing::debug!("Value: {:?}", value);
+
+    let (signing_key, _) = keypair_from_seed("test123!");
+
+    let value = handle_didcomm(value, signing_key);
+
+    tracing::debug!("Value: {:?}", value);
+
+    // Respond back
+    "Received DIDComm message"
 }

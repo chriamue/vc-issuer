@@ -1,3 +1,4 @@
+use ed25519_dalek::VerifyingKey;
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -17,13 +18,20 @@ pub struct DidCommInvitation {
 }
 
 impl DidCommInvitation {
-    pub fn new(id: String, base_url: String) -> Self {
+    pub fn new(
+        id: String,
+        base_url: String,
+        label: Option<String>,
+        verify_key: VerifyingKey,
+    ) -> Self {
+        let base_58_key = bs58::encode(verify_key.to_bytes()).into_string();
+
         let service_endpoint = format!("{}/didcomm", base_url);
         let type_ = "https://didcomm.org/connections/1.0/invitation".to_string();
-        let label = "Invitation to connect".to_string();
-        let recipient_keys = vec!["".to_string()];
-        let routing_keys = vec!["".to_string()];
-        let did = "did:example:123456789abcdefghi".to_string();
+        let label = label.unwrap_or("Invitation to connect".to_string());
+        let recipient_keys = vec![base_58_key.clone()];
+        let routing_keys = vec![base_58_key];
+        let did = id.to_string();
 
         DidCommInvitation {
             type_,

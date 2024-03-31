@@ -4,6 +4,7 @@ use ngrok::prelude::*;
 use std::env;
 use std::net::SocketAddr;
 use tokio::task;
+use tower_http::trace::TraceLayer;
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 use vc_issuer::{
     routes::router,
@@ -15,6 +16,7 @@ async fn main() -> Result<()> {
     dotenv().ok();
     tracing_subscriber::registry()
         .with(tracing_subscriber::fmt::layer())
+        //.with(EnvFilter::new("debug"))
         .init();
 
     let mut tun = ngrok::Session::builder()
@@ -53,7 +55,7 @@ async fn main() -> Result<()> {
 
     let listener = tokio::net::TcpListener::bind("0.0.0.0:3000").await?;
 
-    let app = router(app);
+    let app = router(app).layer(TraceLayer::new_for_http());
     tracing::info!("Running {}", listener.local_addr()?);
 
     let server = task::spawn(async move {
