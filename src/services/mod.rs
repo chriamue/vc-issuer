@@ -1,11 +1,15 @@
 use anyhow::Result;
-use ed25519_dalek::VerifyingKey;
+use base64::engine::general_purpose;
+use base64::Engine as _;
 use qrcode::QrCode;
 
-use crate::{didcomm::DIDDocument, key::keypair_from_seed};
+use crate::{
+    did::{DIDDocument, DidCommInvitation},
+    key::keypair_from_seed,
+};
 
 pub async fn create_qr_code(id: String, base_url: String) -> Result<String> {
-    let didcomm_inv = format!("{}/id?={}", base_url, id);
+    let didcomm_inv = format!("{}/inv?id={}", base_url, id);
     let code = QrCode::new(&didcomm_inv)?;
     let string = code
         .render::<char>()
@@ -14,12 +18,19 @@ pub async fn create_qr_code(id: String, base_url: String) -> Result<String> {
         .dark_color('█')
         .light_color(' ')
         .build();
-    Ok(string)
+    Ok(format!("{}\n{}", string, didcomm_inv))
 }
 
 pub fn create_oob_url(id: &str, base_url: String) -> Result<String> {
-    let oob_data = format!("{}/ssi?oob?id={}", base_url, id);
-    Ok(urlencoding::encode(&oob_data).to_string())
+    let oob_data = DidCommInvitation::new(id.to_string(), base_url.clone());
+    let base64_oob_data = general_purpose::STANDARD.encode(&serde_json::to_string(&oob_data)?);
+    let url = format!(
+        "{}/ssi?oob={}&id={}",
+        base_url,
+        urlencoding::encode(&base64_oob_data),
+        id
+    );
+    Ok(url)
 }
 
 pub fn create_did_document(id: String, domain: String, seed: String) -> Result<String> {

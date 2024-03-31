@@ -2,7 +2,7 @@ use crate::server::AppState;
 use crate::services::{create_did_document, create_oob_url, create_qr_code};
 use axum::Router;
 use axum::{
-    extract::{Path, State},
+    extract::{Path, Query, State},
     response::{IntoResponse, Redirect},
     routing::get,
 };
@@ -16,7 +16,8 @@ pub struct IdQuery {
 pub fn router(app: AppState) -> Router {
     Router::new()
         .route("/qr/:id", get(handle_qr_code_request))
-        .route("/inv/:id", get(handle_invitation_request))
+        .route("/inv", get(handle_invitation_request))
+        .route("/ssi", get(|| async { "Hello from ssi!" }))
         .route("/.well-known/did.json", get(handle_did_doc_request))
         .with_state(app)
 }
@@ -31,10 +32,10 @@ pub async fn handle_qr_code_request(
 }
 
 pub async fn handle_invitation_request(
-    Path(id): Path<String>,
+    Query(query): Query<IdQuery>,
     State(state): State<AppState>,
 ) -> impl IntoResponse {
-    let url = create_oob_url(&id, state.base_url.clone()).unwrap();
+    let url = create_oob_url(&query.id, state.base_url.clone()).unwrap();
     Redirect::temporary(&url)
 }
 

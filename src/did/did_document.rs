@@ -1,5 +1,5 @@
 use anyhow::Result;
-use ed25519_dalek::{SigningKey, VerifyingKey};
+use ed25519_dalek::VerifyingKey;
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize)]

@@ -17,16 +17,6 @@ async fn main() -> Result<()> {
         .with(tracing_subscriber::fmt::layer())
         .init();
 
-    let seed = env::var("SEED").unwrap_or_else(|_| "seed123!".to_string());
-    let base_url = env::var("BASE_URL").unwrap_or_else(|_| "http://localhost:3000".to_string());
-    let domain = env::var("DOMAIN").unwrap_or_else(|_| "localhost".to_string());
-
-    let app = AppState {
-        base_url,
-        domain,
-        seed,
-    };
-
     let mut tun = ngrok::Session::builder()
         .authtoken_from_env()
         .connect()
@@ -40,6 +30,21 @@ async fn main() -> Result<()> {
     let base_url = tun.url().to_string();
 
     tracing::info!("App URL: {:?}", base_url);
+
+    let seed = env::var("SEED").unwrap_or_else(|_| "seed123!".to_string());
+    //let base_url = env::var("BASE_URL").unwrap_or_else(|_| "http://localhost:3000".to_string());
+    //let domain = env::var("DOMAIN").unwrap_or_else(|_| "localhost".to_string());
+
+    let domain = base_url
+        .replace("http://", "")
+        .replace("https://", "")
+        .replace(".ngrok.io", "");
+
+    let app = AppState {
+        base_url,
+        domain,
+        seed,
+    };
 
     let ngrok_tunnel = task::spawn(async move {
         let addr = SocketAddr::from(([127, 0, 0, 1], 3000));
