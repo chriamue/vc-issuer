@@ -6,8 +6,10 @@ use crate::services::{
 };
 use axum::Router;
 use axum::{
+    body::Body,
     extract::{Path, Query, State},
-    response::{IntoResponse, Redirect},
+    http::header::CONTENT_TYPE,
+    response::{IntoResponse, Redirect, Response},
     routing::{get, post},
 };
 use serde::Deserialize;
@@ -30,7 +32,16 @@ pub fn router(app: AppState) -> Router {
         .route("/ssi", get(handle_oob_request))
         .route("/didcomm", post(handle_didcomm_request))
         .route("/.well-known/did.json", get(handle_did_doc_request))
+        .route("/favicon.png", get(handle_favicon_request))
         .with_state(app)
+}
+
+pub async fn handle_favicon_request() -> impl IntoResponse {
+    let favicon = include_bytes!("../assets/favicon.png");
+    Response::builder()
+        .header(CONTENT_TYPE, "image/png")
+        .body(Body::from(favicon.to_vec()))
+        .unwrap()
 }
 
 pub async fn handle_oob_request(Query(query): Query<OOBQuery>) -> impl IntoResponse {

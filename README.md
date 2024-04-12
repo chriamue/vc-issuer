@@ -16,3 +16,5 @@ Run the following command:
 ```sh
 cargo run
 ```
+
+Visit `http://localhost:3000/qr/1` in your browser.

@@ -10,6 +10,8 @@ pub struct DidCommInvitation {
     label: String,
     #[serde(rename = "serviceEndpoint")]
     service_endpoint: String,
+    #[serde(rename = "imageUrl")]
+    image_url: Option<String>,
     #[serde(rename = "recipientKeys")]
     recipient_keys: Vec<String>,
     #[serde(rename = "routingKeys")]
@@ -27,12 +29,14 @@ impl DidCommInvitation {
         let recipient_keys = vec![base_58_key.clone()];
         let routing_keys = vec![base_58_key];
         let did = id.to_string();
+        let image_url = Some(format!("{}/favicon.png", base_url));
 
         DidCommInvitation {
             type_,
             id,
             label,
             service_endpoint,
+            image_url,
             recipient_keys,
             routing_keys,
             did,
