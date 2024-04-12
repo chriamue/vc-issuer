@@ -1,13 +1,14 @@
 use crate::did::DidcommEnvelope;
-use crate::key::keypair_from_seed;
+use crate::key::{enc_keypair_from_seed, sign_keypair_from_seed};
 use crate::server::AppState;
-use crate::services::{create_did_document, create_oob_url, create_qr_code, handle_didcomm};
+use crate::services::{
+    create_did_document, create_oob_url, create_qr_code, decode_oob_data, handle_didcomm,
+};
 use axum::Router;
 use axum::{
     extract::{Path, Query, State},
     response::{IntoResponse, Redirect},
     routing::{get, post},
-    Json,
 };
 use serde::Deserialize;
 
@@ -16,14 +17,25 @@ pub struct IdQuery {
     pub id: String,
 }
 
+#[derive(Deserialize)]
+pub struct OOBQuery {
+    pub oob: String,
+    pub id: String,
+}
+
 pub fn router(app: AppState) -> Router {
     Router::new()
         .route("/qr/:id", get(handle_qr_code_request))
         .route("/inv", get(handle_invitation_request))
-        .route("/ssi", get(|| async { "Hello from ssi!" }))
+        .route("/ssi", get(handle_oob_request))
         .route("/didcomm", post(handle_didcomm_request))
         .route("/.well-known/did.json", get(handle_did_doc_request))
         .with_state(app)
+}
+
+pub async fn handle_oob_request(Query(query): Query<OOBQuery>) -> impl IntoResponse {
+    let data = decode_oob_data(&query.oob).unwrap();
+    serde_json::to_string_pretty(&data).unwrap()
 }
 
 pub async fn handle_qr_code_request(
@@ -65,9 +77,16 @@ pub async fn handle_didcomm_request(
 
     tracing::debug!("Value: {:?}", value);
 
-    let (signing_key, _) = keypair_from_seed("test123!");
+    //let (signing_key, _) = sign_keypair_from_seed("test123!");
+    let (enc_key, _) = enc_keypair_from_seed("test123!");
 
-    let value = handle_didcomm(value, signing_key);
+    let value = handle_didcomm(value, enc_key);
+
+    // save to received.json
+    //
+
+    let file = std::fs::File::create("received.json").unwrap();
+    serde_json::to_writer_pretty(file, &value.as_ref().unwrap()).unwrap();
 
     tracing::debug!("Value: {:?}", value);
 

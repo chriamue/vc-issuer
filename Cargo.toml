@@ -46,4 +46,8 @@ ngrok = { version = "0.13.1", optional = true }
 base64 = "0.22.0"
 bs58 = "0.5.1"
 async-trait = "0.1.79"
-didcomm-rs = { version = "0.7.2", git = "https://github.com/chriamue/didcomm-rs.git", branch = "feature/jwm-header" }
+didcomm-rs = { version = "0.7.2", features = [
+    "raw-crypto",
+], git = "https://github.com/chriamue/didcomm-rs.git", branch = "feature/jwm-header" }
+x25519-dalek = { version = "2.0.1", features = ["static_secrets"] }
+p256 = "0.13.2"

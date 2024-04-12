@@ -5,6 +5,7 @@ use std::env;
 use std::net::SocketAddr;
 use tokio::task;
 use tower_http::trace::TraceLayer;
+use tracing_subscriber::EnvFilter;
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 use vc_issuer::{
     routes::router,
@@ -16,7 +17,7 @@ async fn main() -> Result<()> {
     dotenv().ok();
     tracing_subscriber::registry()
         .with(tracing_subscriber::fmt::layer())
-        //.with(EnvFilter::new("debug"))
+        .with(EnvFilter::new("debug"))
         .init();
 
     let mut tun = ngrok::Session::builder()
