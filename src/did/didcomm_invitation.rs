@@ -23,7 +23,7 @@ impl DidCommInvitation {
     pub fn new(id: String, base_url: String, label: Option<String>, enc_key: PublicKey) -> Self {
         let base_58_key = bs58::encode(enc_key.to_bytes()).into_string();
 
-        let service_endpoint = format!("{}/didcomm", base_url);
+        let service_endpoint = format!("{}/didcomm/", base_url);
         let type_ = "https://didcomm.org/connections/1.0/invitation".to_string();
         let label = label.unwrap_or("Invitation to connect".to_string());
         let recipient_keys = vec![base_58_key.clone()];

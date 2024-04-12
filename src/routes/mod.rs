@@ -27,10 +27,17 @@ pub struct OOBQuery {
 
 pub fn router(app: AppState) -> Router {
     Router::new()
+        .route(
+            "/",
+            get(|| async {
+                Redirect::temporary(&format!("/qr/{}", uuid::Uuid::new_v4().to_string()))
+            }),
+        )
         .route("/qr/:id", get(handle_qr_code_request))
         .route("/inv", get(handle_invitation_request))
+        .route("/s", get(handle_invitation_request))
         .route("/ssi", get(handle_oob_request))
-        .route("/didcomm", post(handle_didcomm_request))
+        .route("/didcomm/", post(handle_didcomm_request))
         .route("/.well-known/did.json", get(handle_did_doc_request))
         .route("/favicon.png", get(handle_favicon_request))
         .with_state(app)
@@ -93,10 +100,7 @@ pub async fn handle_didcomm_request(
 
     let value = handle_didcomm(value, enc_key);
 
-    // save to received.json
-    //
-
-    let file = std::fs::File::create("received.json").unwrap();
+    let file = std::fs::File::create("received_didcomm.json").unwrap();
     serde_json::to_writer_pretty(file, &value.as_ref().unwrap()).unwrap();
 
     tracing::debug!("Value: {:?}", value);

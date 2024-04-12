@@ -13,7 +13,7 @@ use crate::{
 };
 
 pub async fn create_qr_code(id: String, base_url: String) -> Result<String> {
-    let didcomm_inv = format!("{}/inv?id={}", base_url, id);
+    let didcomm_inv = format!("{}/s?id={}", base_url, id);
     let code = QrCode::new(&didcomm_inv)?;
     let string = code
         .render::<char>()
