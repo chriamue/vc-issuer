@@ -35,7 +35,7 @@ async fn main() -> Result<()> {
     tracing::info!("App URL: {:?}", base_url);
 
     let seed = env::var("SEED").unwrap_or_else(|_| "seed123!".to_string());
-    //let base_url = env::var("BASE_URL").unwrap_or_else(|_| "http://localhost:3000".to_string());
+    let base_url = env::var("BASE_URL").unwrap_or_else(|_| base_url);
     //let domain = env::var("DOMAIN").unwrap_or_else(|_| "localhost".to_string());
 
     let domain = base_url

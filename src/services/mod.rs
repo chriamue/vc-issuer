@@ -13,7 +13,7 @@ use crate::{
 };
 
 pub async fn create_qr_code(id: String, base_url: String) -> Result<String> {
-    let didcomm_inv = format!("{}/s?id={}", base_url, id);
+    let didcomm_inv = format!("{}/inv?id={}", base_url, id);
     let code = QrCode::new(&didcomm_inv)?;
     let string = code
         .render::<char>()
@@ -53,17 +53,59 @@ pub fn create_did_document(id: String, domain: String, seed: String) -> Result<S
 }
 
 pub fn handle_didcomm(value: Value, priv_key: StaticSecret) -> Result<String> {
+    let protected = value["protected"].as_str().unwrap();
+    let protected = base64::decode(protected)?;
+    let mut protected = serde_json::from_slice::<Value>(&protected)?;
+    protected["typ"] = Value::String("application/didcomm-encrypted+json".to_string());
+
+    let header = protected["recipients"][0]["header"].as_object().unwrap();
+
+    println!("{:?}", header);
+
+    //let enc_key = header["encrypted_key"].as_str().unwrap();
+
+    //let kid = header["kid"].as_str().unwrap();
+
+    protected["kid"] = header["kid"].clone();
+    let protected = serde_json::to_string(&protected)?;
+
+    let protected = base64::encode(protected);
+
+    let mut value = value.clone();
+    value["protected"] = Value::String(protected);
+
     let jwe_string: String = serde_json::to_string(&value)?;
 
     tracing::debug!("jwe_string: {}", jwe_string);
 
     let private = priv_key.to_bytes();
 
-    match Message::receive(&jwe_string, Some(&private), None, None) {
+    match Message::receive(&jwe_string, Some(&private), Some("dUF".into()), None) {
         Ok(message) => Ok(serde_json::to_string_pretty(&message)?),
         Err(e) => {
             tracing::error!("Error: {:?}", e);
             Err(anyhow::anyhow!("Error: {:?}", e))
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use x25519_dalek::PublicKey;
+
+    #[test]
+    fn test_handle_didcomm() -> Result<()> {
+        let seed = "seed123!";
+        let (priv_key, public_key) = enc_keypair_from_seed(seed);
+        let (_, verify_key) = sign_keypair_from_seed(seed);
+
+        let value = include_str!("../../received_didcomm.json");
+        let value: Value = serde_json::from_str(value).unwrap();
+
+        let result = handle_didcomm(value, priv_key)?;
+
+        assert_eq!("", result);
+        Ok(())
     }
 }

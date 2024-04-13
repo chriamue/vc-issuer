@@ -95,13 +95,13 @@ pub async fn handle_didcomm_request(
 
     tracing::debug!("Value: {:?}", value);
 
+    let file = std::fs::File::create("received_didcomm.json").unwrap();
+    serde_json::to_writer_pretty(file, &value).unwrap();
+
     //let (signing_key, _) = sign_keypair_from_seed("test123!");
     let (enc_key, _) = enc_keypair_from_seed("test123!");
 
     let value = handle_didcomm(value, enc_key);
-
-    let file = std::fs::File::create("received_didcomm.json").unwrap();
-    serde_json::to_writer_pretty(file, &value.as_ref().unwrap()).unwrap();
 
     tracing::debug!("Value: {:?}", value);
 
