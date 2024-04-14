@@ -1,6 +1,8 @@
 use ed25519_dalek::SECRET_KEY_LENGTH;
 use jsonwebtoken::{encode, Algorithm, EncodingKey, Header};
 
+use did_key::{generate, DIDCore, Ed25519KeyPair, KeyMaterial};
+
 mod claims;
 mod cred_offer;
 mod oauth_grants;
@@ -11,14 +13,18 @@ pub use cred_offer::CredOffer;
 pub use oauth_grants::OAuthGrants;
 pub use pre_authorized_code::PreAuthorizedCode;
 
-pub fn create_jwt(
-    claims: Claims,
-    secret: &[u8; SECRET_KEY_LENGTH],
-) -> Result<String, jsonwebtoken::errors::Error> {
-    let encoding_key = EncodingKey::from_secret(secret);
+pub fn create_jwt(claims: Claims, seed: &str) -> Result<String, jsonwebtoken::errors::Error> {
+    let keypair = generate::<Ed25519KeyPair>(Some(seed.as_bytes()));
+
+    let did = keypair.get_did_document(Default::default()).id;
+
+    let doc =
+        ring::signature::Ed25519KeyPair::generate_pkcs8(&ring::rand::SystemRandom::new()).unwrap();
+    let encoding_key = EncodingKey::from_ed_der(doc.as_ref());
 
     let header = Header {
-        alg: Algorithm::HS256,
+        alg: Algorithm::EdDSA,
+        kid: Some(format!("{}#{}", did, did.replace("did:key:", ""))),
         ..Default::default()
     };
 

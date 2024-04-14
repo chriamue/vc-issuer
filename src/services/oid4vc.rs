@@ -1,11 +1,12 @@
 use crate::oid4vc::{create_jwt, Claims, CredOffer, OAuthGrants, PreAuthorizedCode};
 use anyhow::Result;
 use chrono::{Duration, Utc};
+use did_key::{generate, DIDCore, Ed25519KeyPair};
 use ed25519_dalek::SECRET_KEY_LENGTH;
 use qrcode::QrCode;
 
 pub async fn create_qr_code(id: String, base_url: String) -> Result<String> {
-    let credential_offer_uri = &format!("{}/creds/{}", base_url, id);
+    let credential_offer_uri = &format!("https://{}/creds/{}", base_url, id);
     let inv = format!(
         "openid-credential-offer://?credential_offer_uri={}",
         urlencoding::encode(credential_offer_uri)
@@ -22,16 +23,19 @@ pub async fn create_qr_code(id: String, base_url: String) -> Result<String> {
 }
 
 pub fn create_cred_offer(id: String, domain: String, seed: String) -> Result<CredOffer> {
+    let keypair = generate::<Ed25519KeyPair>(Some(seed.as_bytes()));
+
+    let did = keypair.get_did_document(Default::default()).id;
+
     let claims = Claims {
-        iss: "https://example.com".to_string(),
+        iss: did,
         iat: Utc::now().timestamp(),
         exp: (Utc::now() + Duration::days(1)).timestamp(),
-        id: "1234567890".to_string(),
-        session_id: "1234567890".to_string(),
+        id: id.clone(),
+        session_id: id,
     };
 
-    let secret = [0u8; SECRET_KEY_LENGTH];
-    let jwt = create_jwt(claims.clone(), &secret).unwrap();
+    let jwt = create_jwt(claims.clone(), &seed).unwrap();
 
     let cred_offer = CredOffer {
         grants: OAuthGrants {
@@ -40,8 +44,8 @@ pub fn create_cred_offer(id: String, domain: String, seed: String) -> Result<Cre
                 pre_authorized_code: jwt,
             },
         },
-        credentials: vec!["TestCertificate".to_string()],
-        credential_issuer: format!("did:{}", domain),
+        credentials: vec!["School Course Certificate".to_string()],
+        credential_issuer: format!("https://{}/", domain),
     };
     Ok(cred_offer)
 }
