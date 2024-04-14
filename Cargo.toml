@@ -11,7 +11,9 @@ categories = ["web-programming", "security"]
 authors = ["Christian M <chriamue@gmail.com>"]
 
 [features]
-default = ["server"]
+default = ["server", "oid4vc"]
+didcomm = ["didcomm-rs"]
+oid4vc = ["jsonwebtoken"]
 server = [
     "dotenv",
     "ngrok",
@@ -46,8 +48,10 @@ ngrok = { version = "0.13.1", optional = true }
 base64 = "0.22.0"
 bs58 = "0.5.1"
 async-trait = "0.1.79"
-didcomm-rs = { version = "0.7.2", git = "https://github.com/decentralized-identity/didcomm-rs" }
+didcomm-rs = { version = "0.7.2", git = "https://github.com/decentralized-identity/didcomm-rs", optional = true }
 x25519-dalek = { version = "2.0.1", features = ["static_secrets"] }
 p256 = "0.13.2"
 uuid = { version = "1.8.0", features = ["v4"] }
 url = "2.5.0"
+jsonwebtoken = { version = "9.3.0", optional = true }
+chrono = "0.4.37"
